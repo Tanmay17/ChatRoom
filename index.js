@@ -59,7 +59,7 @@ io.on('connection', (socket) => {
         else 
             response = roman_to_Int(msg);
         
-        //Broadcasting msg to all clients
+        //Broadcasting msg to all clients in socket
         if(response == -1)
             io.emit('chat message', msg);
         else
