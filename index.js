@@ -5,7 +5,7 @@ const uuidv1 = require('uuid/v1');
 const sqlite3 = require('sqlite3').verbose();
 
 //DB setup
-var db = new sqlite3.Database('./Database/relation.db', (err)=>{
+var db = new sqlite3.Database('relation.db', (err)=>{
     if(err) console.error(err.message);
     console.log("Connection with in-memory DB is succesfully made");
     //Creating Table on start of server
