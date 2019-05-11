@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
 //IO Connections
 io.on('connection', (socket) => {
     console.log('A User connected');
-
+    let pass = true;
     let address = socket.handshake.address;
     let getIP = (address)=> {
         return address.slice(7);
@@ -78,22 +78,25 @@ io.on('connection', (socket) => {
 
         let response;
         if(msg.match(/==/g)){
+            let arrMsg = msg.split('==');
             //if int
-            if(msg.charAt(0).match(/^[0-9]+$/) != null){
-                db.all("SELECT * FROM relations WHERE ip=? AND num=?", [getIP(address), msg.slice(0, msg.indexOf('=') )], (err, rows)=> {
+            if(arrMsg[0].match(/^[0-9]+$/) != null){
+                db.all("SELECT * FROM relations WHERE ip=? AND num=?", [getIP(address), arrMsg[0]], (err, rows)=> {
                     //Replace Values
+                    console.log(rows)
                     rows.forEach((row)=>{
                         db.run("DELETE FROM relations WHERE id=?", [row.id], (err)=>{
                             if(err) console.log(err.message);
                         });
                     });
                 });
-                db.run("INSERT into relations VALUES (?,?,?,?)", [uuidv1(), ip, msg.slice(0, msg.indexOf('=') ), /*romanValue*/], (err)=>{
+                db.run("INSERT into relations VALUES (?,?,?,?)", [uuidv1(), getIP(address), arrMsg[0] , arrMsg[1]], (err)=>{
                     if(err) console.log(err.message);
                     console.log("New relation Added");
                 }); 
             }else{
-                db.all("SELECT * FROM relations WHERE ip=? AND roman=?", [getIP(address), msg.slice(0, msg.indexOf('=') )], (err, rows)=> {
+                db.all("SELECT * FROM relations WHERE ip=? AND roman=?", [getIP(address), arrMsg[0]], (err, rows)=> {
+                    console.log(rows)                    
                     //Replace Values
                     rows.forEach((row)=>{
                         db.run("DELETE FROM relations WHERE id=?", [row.id], (err)=>{
@@ -101,39 +104,38 @@ io.on('connection', (socket) => {
                         });
                     });
                 });
-                db.run("INSERT into relations VALUES (?,?,?,?)", [uuidv1(), ip, /*numericalValue*/, msg.slice(0, msg.indexOf('=') )], (err)=>{
+                db.run("INSERT into relations VALUES (?,?,?,?)", [uuidv1(), getIP(address), arrMsg[1], arrMsg[0]], (err)=>{
                     if(err) console.log(err.message);
                     console.log("New relation Added");
                 }); 
             }
         }else{
-            //Geting all the data
+            //Getting all the data
             if(msg.match(/^[0-9]+$/) != null){
                 db.all("SELECT * FROM relations WHERE ip=? AND num=?", [getIP(address), msg], (err, rows)=> {
-                    io.emit('chat message', rows.roman); 
+                    rows.forEach((row)=>{
+                        io.emit('chat message', row.roman); 
+                    });
+                    pass = false;
                 });
                 response = intToRoman(msg);
             }else{
                 db.all("SELECT * FROM relations WHERE ip=? AND roman=?", [getIP(address), msg], (err, rows)=> {
-                    io.emit('chat message', rows.num); 
+                    rows.forEach((row)=>{
+                        io.emit('chat message', row.num); 
+                    });
+                    pass = false;
                 });
                 response = romanToInt(msg);
             }
 
             //Broadcasting msg to all clients in socket
-            if(response == -1)
-                io.emit('chat message', msg);
-            else
-                io.emit('chat message', response);  
+            if(pass) io.emit('chat message', response);  
         }
     });
 
     socket.on('disconnect', ()=>{
         console.log("A User Disconnect");
-        // db.close((err)=>{
-        //     if(err) console.error(err.message);
-        //     console.log("DB connection is no more Available");
-        // });
     })
 });
 
