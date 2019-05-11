@@ -115,22 +115,22 @@ io.on('connection', (socket) => {
                 db.all("SELECT * FROM relations WHERE ip=? AND num=?", [getIP(address), msg], (err, rows)=> {
                     rows.forEach((row)=>{
                         io.emit('chat message', row.roman); 
+                        pass = false;
                     });
-                    pass = false;
                 });
                 response = intToRoman(msg);
             }else{
                 db.all("SELECT * FROM relations WHERE ip=? AND roman=?", [getIP(address), msg], (err, rows)=> {
                     rows.forEach((row)=>{
                         io.emit('chat message', row.num); 
+                        pass = false;
                     });
-                    pass = false;
                 });
                 response = romanToInt(msg);
             }
 
             //Broadcasting msg to all clients in socket
-            if(pass) io.emit('chat message', response);  
+            if(pass) io.emit('chat message', response);
         }
     });
 
