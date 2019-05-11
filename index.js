@@ -141,6 +141,6 @@ io.on('connection', (socket) => {
 
 
 //Server Config
-http.listen(process.env.PORT , ()=>{
+http.listen(process.env.PORT || 3000 , ()=>{
     console.log("Server is running");
 });
